@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <script src="/lib/jquery-3.3.1.min.js"></script>
+    <style>
+    .table_Node {border-collapse:collapse; border-spacing:0px; border:0px; padding:0px; vertical-align:middle;}
+    .th_Node {border:0px; padding:0px; padding-left:4px; vertical-align:middle;}
+    .td_Node {border:0px; padding:5px; vertical-align:middle; position:relative;}
+    .lbl_NodeName {font-size:14px;}
+    .lbl_NodeBirthDeath {font-size:12px;}
+    .divPerson {    
+        display:block; 
+        width:100%; 
+        color:#eeeeee; 
+        border:1px solid black; 
+        padding:3px 4px 5px 4px; 
+        left:8px; 
+        min-width:75px; 
+        border-radius:8px; 
+        background-color: #333;
+    }
+    .div_AnchorLine {
+        display:block;
+        position:absolute;
+        width:10px;
+        left:0px;
+        background-image: url("/img/centerPixels.png");
+    }
+    .div_AnchorTop {
+        display:block;
+        position:absolute;
+        width:10px;
+        height:2px;
+        top:0px;
+        background-image: url("/img/pointRight.png");
+    }
+    .div_AnchorBottom {
+        display:block;
+        position:absolute;
+        width:10px;
+        height:2px;
+        bottom:0px;
+        background-image: url("/img/pointRight.png");
+    }
+    .table_EmptyParent {
+        height:28px;
+        vertical-align:middle;
+    }
+
+    .table_Dad {
+        margin-left:10px; 
+        margin-bottom:2px;
+    }
+
+    .div_DadLine {
+        display:block;
+        position:absolute;
+        width:10px;
+        left:9px;
+        background-image: url("/img/centerPixels.png");
+    }
+    .div_DadTop {
+        display:block;
+        position:absolute;
+        width:10px;
+        height:2px;
+        top:0px;
+        background-image: url("/img/pointRight.png");
+    }
+    .div_DadBottom {
+        display:block;
+        position:absolute;
+        width:10px;
+        height:2px;
+        bottom:0px;
+        background-image: url("/img/pointLeft.png");
+    }
+
+    .table_Mom {
+        margin-left:10px; 
+        margin-top:2px;
+    }
+    .div_MomLine {
+        display:block;
+        position:absolute;
+        width:10px;
+        /*height:25%;
+        top:50%;*/
+        left:9px;
+        background-image: url("/img/centerPixels.png");
+    }
+    .div_MomTop {
+        display:block;
+        position:absolute;
+        width:10px;
+        height:2px;
+        top:0px;
+        background-image: url("/img/pointLeft.png");
+    }
+    .div_MomBottom {
+        display:block;
+        position:absolute;
+        width:10px;
+        height:2px;
+        bottom:0px;
+        background-image: url("/img/pointRight.png");
+    }
+
+    </style>
+</head>
+<body>
+<div id='treeDiv' style='position:relative;'></div>
+</body>
+</html>
+
+<script>
+
+// this is just skeleton objects
+var people = [];
+var blankPerson = {
+    ID : 0,
+    Name:"&nbsp;",
+    BirthDate:"",
+    BirthPlace:"",
+    DeathDate:"",
+    DeathPlace:"",
+    DadID:0,
+    MomID:0
+};
+var marriages = [];
+var blankMarriage = {
+    HusbandID: 0, 
+    WifeID: 0,
+    MarriedDate: "",
+    MarriedPlace: ""
+};
+// these anchors are what are used to start the tree
+// the anchorPerson is the person with no children
+// if the tree data is broken (i.e. a great-grandparent without a chlid), 
+// then results are unpredictable.
+var anchorPerson = blankPerson;
+var anchorHusband = blankPerson;
+var anchorWife = blankPerson;
+var anchorMarriage = blankMarriage;
+
+$(document).ready(function(){
+    loadPeople();
+    loadMarriages();
+    buildTree();
+});
+
+// this should be an ajax get
+function loadPeople()
+{
+    addPerson(1100, "Person1100","1890-01-01","1921-07-14",0,0);
+    addPerson(10, "Person10","","",100,101);
+    addPerson(100, "Person100","","",1000,2);
+    addPerson(1001, "Person1001","","",0,1100);
+    addPerson(1, "Person1","1992-01-15","",10,11);
+    addPerson(101, "Person101","","",1010,1011);
+    addPerson(1010, "Person1010","","",0,0);
+    addPerson(1011, "Person1011","","",0,0);
+
+    addPerson(11, "Person11","","",110,111);
+    addPerson(110, "Person110","","",1100,0);
+    addPerson(1000, "Person1000","","",0,0);
+    addPerson(8, "Person8","","",0,0);
+    addPerson(2, "Person2","","",0,21);
+    addPerson(1101, "Person1101","","",0,0);
+    addPerson(21, "Person21","","",1101,0);
+    addPerson(111, "Person111","","",1110,1111);
+    addPerson(1110, "Person1110","","",0,0);
+    addPerson(1111, "Person1111","","",0,0);
+}
+
+// the ajax routine will return an array of person objects,
+// so this won't even be here
+function addPerson(id,name,born,died,dadid, momid)
+{
+    people.push({
+        ID : id,
+        Name:name,
+        BirthDate:born,
+        BirthPlace:"",
+        DeathDate:died,
+        DeathPlace:"",
+        DadID:dadid,
+        MomID:momid
+    });
+}
+
+// this should be an ajax get
+function loadMarriages()
+{
+    addMarriage(110,111);
+    addMarriage(1110,1111);
+    addMarriage(1,8);
+    addMarriage(10,11);
+    addMarriage(100,101);
+    addMarriage(0,21);
+    addMarriage(1000,2);
+    addMarriage(1100,1101);
+}
+
+// the ajax routine will return an array of person objects,
+// so this won't even be here
+function addMarriage(hid,wid)
+{
+    marriages.push({
+        HusbandID: hid, 
+        WifeID: wid,
+        MarriedDate: "",
+        MarriedPlace: ""
+    });    
+}
+
+// pretty much the only thing I couldn't figure out 
+// is how to always get someone centered on parents
+// people can ride a little high or a little low on their connectors 
+// line depending on how the tree is structured to their right
+function buildTree()
+{
+    // clear everything
+    $('#treeDiv').html("");
+
+    // find someone with no children
+    // again, if the tree is broken, then this will not work
+    anchorPerson = findAnchorPerson();
+
+    // find out if the anchorPerson is married
+    anchorMarriage = findMarriage(anchorPerson.ID);   
+    if (anchorMarriage == blankMarriage)
+    {
+        // if not, start the tree with the anchorPerson
+        $('#treeDiv').append("<table id='table_"+anchorPerson.ID+"' class='table_Node' cellpadding='0'></table>");
+    }
+    else
+    {
+        // otherwise, figure out who is the husband and who is the wife and then start with both
+        anchorHusband = findPersonByID(anchorMarriage.HusbandID);
+        anchorWife = findPersonByID(anchorMarriage.WifeID);
+        $('#treeDiv').append("<table id='table_"+anchorMarriage.HusbandID+"' cellpadding='0' class='table_Node' style='margin-left:5px;'></table>");
+        $('#treeDiv').append("<div id='div_AnchorLine' class='div_AnchorLine' style='top:0px;'>"
+                                +"<div class='div_AnchorTop'></div>"        
+                                +"<div class='div_AnchorBottom'></div>"
+                            +"</div>");
+        $('#treeDiv').append("<table id='table_"+anchorMarriage.WifeID+"' cellpadding='0' class='table_Node' style='margin-left:5px;'></table>");
+
+    }
+
+    var finished = false;
+    while(finished == false)
+    {
+        var somethingWasDone = false;
+        $.each(people,function(){
+            var thisPerson = this;
+            var foundIt = false;
+            $('.table_Node').each(function(){
+                if ($(this).attr('id') == "table_"+thisPerson.ID)
+                {
+                    if ($(this).html() == "") //  should only happen twice. once with anchorHusband and once with anchorWife
+                    {
+                        somethingWasDone = true;
+                        $(this).html(getPersonHTML(thisPerson));                        
+                    }
+                    else if ($('#div_'+thisPerson.ID).html() == "&nbsp;")
+                    {
+                        somethingWasDone = true;
+                        $(this).html(getPersonHTML(thisPerson));                        
+                    }
+                }
+            });
+        });
+        if (somethingWasDone == false)
+            finished = true;
+    }
+    // if the anchor person is married, add the line linking the couple
+    if (anchorMarriage != blankMarriage)
+    {
+        var top = $('#div_'+anchorMarriage.HusbandID).offset().top;
+        var height = Number($('#div_'+anchorMarriage.WifeID).offset().top) - top;
+        $('#div_AnchorLine').attr('style','top:'+Number(top+8)+'px; height:'+height+'px;');
+    }
+
+    // now, add connectots to everybody's parents
+    $('.td_Parents').each(function(){
+        addDadConnector($(this).attr('id').substr(11));
+        addMomConnector($(this).attr('id').substr(11));
+    });
+}
+
+function getPersonHTML(person)
+{
+    var dad = findPersonByID(person.DadID);
+    var mom = findPersonByID(person.MomID);
+
+    var dadClass = "table_Dad";
+    var momClass = "table_Mom";
+
+    if (dad == blankPerson && mom != blankPerson)
+        dadClass += " table_EmptyParent";
+
+    if (mom == blankPerson && dad != blankPerson)
+        momClass += " table_EmptyParent";
+
+    var HTML = ""
+            +"<tr id='tr_"+person.ID+"' class='tr_Node'>"
+                +"<th class='th_Node'>"
+                    +"<div id='div_"+person.ID+"' class='divPerson'>"
+                        +"<label class='lbl_NodeName'>"+person.Name+"</label>"
+                        +"<label class='lbl_NodeBirthDeath'>"+getBirthDeathInfo(person)+"</label>"
+                        +"</div>"
+                +"</th>"
+                +"<td id='td_parents_"+person.ID+"' class='td_Node td_Parents'>"
+                    +"<table id='table_"+person.DadID+"' class='table_Node "+dadClass+"'>"
+                        +"<tr id='tr_"+person.DadID+"' class='tr_Node'>"
+                            +"<th class='th_Node'>"
+                                +"<div id='div_"+person.DadID+"' class='divPerson'>&nbsp;</div>"
+                            +"</th>"
+                        +"</tr>"
+                    +"</table>"
+                    +"<table id='table_"+person.MomID+"' class='table_Node "+momClass+"' style='height:50%'>"
+                        +"<tr id='tr_"+person.MomID+"' class='tr_Node'>"
+                            +"<th class='th_Node'>"
+                                +"<div id='div_"+person.MomID+"' class='divPerson'>&nbsp;</div>"
+                            +"</th>"
+                        +"</tr>"
+                    +"</table>"
+                +"</td>"
+            +"</tr>"
+    return HTML;
+}
+// the goal here is to return "(1900-1975)"
+// but, we may get "(-1975)" or "(1900-)" or nothing at all
+// the div/label arrangement allows for either with no impact on spacing
+function getBirthDeathInfo(person)
+{
+    var birthyear = getBirthYear(person);
+    var deathyear = geDeathYear(person);
+    var retval = birthyear+" - "+deathyear;
+    if (retval == " - ")
+        retval = "";
+    else
+        retval = "<br/>("+retval+")";
+    return retval;
+}
+function getBirthYear(person)
+{
+    var retval = "";
+    if (person.BirthDate.length >= 4)
+        retval = person.BirthDate.substr(0,4);
+    return retval;
+}
+
+function geDeathYear(person)
+{
+    var retval = "";
+    if (person.DeathDate.length >= 4)
+        retval = person.DeathDate.substr(0,4);
+    return retval;
+}
+
+// add the connector between the person and the dad
+function addDadConnector(personID)
+{
+    if ($('#td_parents_'+personID).length != 0)
+    {
+        var personTop = Number($('#div_'+personID).offset().top);
+        var personHeight = Number($('#div_'+personID).outerHeight());
+        var personPadding = parseInt($('#div_'+personID).css('padding-top'))+parseInt($('#div_'+personID).css('padding-bottom'));
+        var personCenter = personTop + ((personHeight + personPadding) / 2) - 10;
+        var dadTable = $('#td_parents_'+personID).children('.table_Node')[0];
+        var dadDiv = $(dadTable).find('.divPerson')[0];
+        if ($(dadDiv).length > 0)
+        {
+            var dadTop = Number($(dadDiv).offset().top);
+            var dadHeight = Number($(dadDiv).outerHeight());
+            var dadPadding = parseInt($(dadDiv).css('padding-top'))+parseInt($(dadDiv).css('padding-bottom'));
+            var dadCenter = dadTop + ((dadHeight + dadPadding) / 2) - 10;
+            var left = Number($(dadDiv).offset().left) - 18;
+            var height = personCenter - dadCenter;
+            $('#treeDiv').append("<div id='div_DadLine_"+personID+"' class='div_DadLine' style='top:"+dadCenter+"px; left:"+left+"px; height:"+height+"px;'>"
+                                    +"<div class='div_DadTop'></div>"
+                                    +"<div class='div_DadBottom'></div>"
+                                +"</div>");
+        }
+    }
+}
+
+// add the connector between the person and the mom
+function addMomConnector(personID)
+{
+    if ($('#td_parents_'+personID).length != 0)
+    {
+        var personTop = Number($('#div_'+personID).offset().top);
+        var personHeight = Number($('#div_'+personID).innerHeight());
+        var personPadding = parseInt($('#div_'+personID).css('padding-top'))+parseInt($('#div_'+personID).css('padding-bottom'));
+        var personCenter = personTop + ((personHeight + personPadding) / 2) - 11;
+        var momTable = $('#td_parents_'+personID).children('.table_Node')[1];            
+        var momDiv = $(momTable).find('.divPerson')[0];
+        if ($(momDiv).length > 0)
+        {
+            var momTop = Number($(momDiv).offset().top);
+            var momHeight = Number($(momDiv).outerHeight());
+            var momPadding = parseInt($(momDiv).css('padding-top'))+parseInt($(momDiv).css('padding-bottom'));
+            var momCenter = momTop + ((momHeight + momPadding) / 2) - 10;
+            var left = Number($(momDiv).offset().left) - 18;
+            var height = momCenter - personCenter;
+            $('#treeDiv').append("<div id='div_MomLine_"+personID+"' class='div_MomLine' style='top:"+personCenter+"px; left:"+left+"px; height:"+height+"px;'>"
+                                    +"<div class='div_MomTop'></div>"
+                                    +"<div class='div_MomBottom'></div>"
+                                +"</div>");
+        }
+    }
+}
+
+// find someone who has no child
+// this actually returns the last on in the list with no child,
+// but there should be only a max of 2 and they'd be married,
+// so it doesn't really matter
+// handling siblings would bring a new level of complexity
+function findAnchorPerson()
+{
+    var thisPerson = blankPerson;
+    var idWithNoChild = 0;
+    $.each(people,function(){
+        var somePerson = this;
+        var hasChild = false;
+        $.each(people,function(){
+            if (this.DadID == somePerson.ID || this.MomID == somePerson.ID)
+                hasChild = true;
+        });
+        if (hasChild == false)
+            thisPerson = somePerson;
+    });
+    return thisPerson;
+}
+
+function findMarriage(personID)
+{
+    var marriage = blankMarriage;
+    $.each(marriages,function(){
+        if (personID == this.HusbandID || personID == this.WifeID)
+             marriage = this;
+    });
+    return marriage;
+}
+
+function findPersonByID(personID)
+{
+    var person = blankPerson;
+    $.each(people,function(){
+        if (this.ID == personID)
+            person = this;
+    });
+    return person;
+}
+
+// this isn't in use right now, but it might be useful at some point
+function findSpouse(personID)
+{
+    var spouse = blankPerson;
+    $.each(marriages,function(){
+        if (this.HusbandID == personID)
+            spouse = findPersonByID(this.WifeID)
+        else if (this.WifeID == personID)
+            spouse = findPersonByID(this.HusbandID)
+    });
+    return spouse;
+}
+
+</script>
