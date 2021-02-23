@@ -4,8 +4,9 @@
   padding: 0;
 }
 body {
-  zoom: 50%;
+  width: 3000px;
   /*
+  zoom: 50%;
   -moz-transform: scale(5);
   -moz-transform-origin: 0 0;
   also
